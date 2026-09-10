@@ -29,6 +29,7 @@ app.use((request, response) => {
 app.use((error, request, response, next) => {
   const status = error.status || 500;
   response.status(status).json({
-    message: error.message || "Something went wrong."
+    message: error.message || "Something went wrong.",
+    details: error.details
   });
 });

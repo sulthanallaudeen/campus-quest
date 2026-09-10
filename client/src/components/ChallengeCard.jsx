@@ -10,15 +10,16 @@ export default function ChallengeCard({ challenge }) {
           <h3 className="mt-2 text-lg font-bold text-white">{challenge.title}</h3>
         </div>
         <span className={`rounded-full px-3 py-1 text-xs font-bold ${challenge.completed ? "bg-emerald-400 text-slate-950" : "bg-slate-800 text-slate-200"}`}>
-          {challenge.completed ? "Done" : `${challenge.points} XP`}
+          {challenge.completed ? "Complete" : `${challenge.points} XP`}
         </span>
       </div>
       <p className="mt-3 line-clamp-3 text-sm text-slate-300">{challenge.description}</p>
       <div className="mt-4 flex items-center justify-between text-sm">
         <span className="rounded-full border border-white/10 px-3 py-1 text-slate-300">{challenge.difficulty}</span>
-        <span className="text-teal-200 transition group-hover:translate-x-1">Open quest</span>
+        <span className="text-teal-200 transition group-hover:translate-x-1">Start quiz</span>
       </div>
     </Link>
   );
 }
+
 

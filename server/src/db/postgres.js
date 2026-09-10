@@ -58,6 +58,7 @@ export function createPostgresDatabase() {
         difficulty TEXT NOT NULL,
         points INTEGER NOT NULL,
         requirements TEXT NOT NULL DEFAULT '',
+        quiz_questions JSONB NOT NULL DEFAULT '[]'::jsonb,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
@@ -65,6 +66,7 @@ export function createPostgresDatabase() {
         id SERIAL PRIMARY KEY,
         student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
         challenge_id INTEGER NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+        score INTEGER NOT NULL DEFAULT 0,
         completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE(student_id, challenge_id)
       );
@@ -87,24 +89,48 @@ export function createPostgresDatabase() {
       );
     `);
 
-    const challengeCount = await get("SELECT COUNT(*)::int AS count FROM challenges");
-    if (challengeCount.count === 0) {
-      for (const challenge of defaultChallenges) {
+    await pool.query("ALTER TABLE challenges ADD COLUMN IF NOT EXISTS quiz_questions JSONB NOT NULL DEFAULT '[]'::jsonb");
+    await pool.query("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS score INTEGER NOT NULL DEFAULT 0");
+
+    const quizCount = await get("SELECT COUNT(*)::int AS count FROM challenges WHERE title LIKE 'Level %:%'");
+    if (quizCount.count === 0) {
+      await pool.query("DELETE FROM student_badges; DELETE FROM submissions; DELETE FROM badges; DELETE FROM challenges;");
+    }
+
+    for (const challenge of defaultChallenges) {
+      const existing = await pool.query("SELECT id FROM challenges WHERE title = $1", [challenge.title]);
+      const values = [challenge.title, challenge.description, challenge.category, challenge.difficulty, challenge.points, challenge.requirements, JSON.stringify(challenge.quiz_questions || [])];
+      if (existing.rows[0]) {
         await pool.query(
-          `INSERT INTO challenges (title, description, category, difficulty, points, requirements)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [challenge.title, challenge.description, challenge.category, challenge.difficulty, challenge.points, challenge.requirements]
+          `UPDATE challenges
+           SET description = $2, category = $3, difficulty = $4, points = $5, requirements = $6, quiz_questions = $7
+           WHERE title = $1`,
+          values
+        );
+      } else {
+        await pool.query(
+          `INSERT INTO challenges (title, description, category, difficulty, points, requirements, quiz_questions)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          values
         );
       }
     }
 
-    const badgeCount = await get("SELECT COUNT(*)::int AS count FROM badges");
-    if (badgeCount.count === 0) {
-      for (const badge of defaultBadges) {
+    for (const badge of defaultBadges) {
+      const existing = await pool.query("SELECT id FROM badges WHERE name = $1", [badge.name]);
+      const values = [badge.name, badge.description, badge.icon, badge.requirement_type, badge.requirement_value];
+      if (existing.rows[0]) {
+        await pool.query(
+          `UPDATE badges
+           SET description = $2, icon = $3, requirement_type = $4, requirement_value = $5
+           WHERE name = $1`,
+          values
+        );
+      } else {
         await pool.query(
           `INSERT INTO badges (name, description, icon, requirement_type, requirement_value)
            VALUES ($1, $2, $3, $4, $5)`,
-          [badge.name, badge.description, badge.icon, badge.requirement_type, badge.requirement_value]
+          values
         );
       }
     }
@@ -112,3 +138,4 @@ export function createPostgresDatabase() {
 
   return { type: "postgres", run, all, get, placeholders, initialize };
 }
+

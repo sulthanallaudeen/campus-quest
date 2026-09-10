@@ -22,7 +22,7 @@ export default function ChallengesPage() {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <p className="text-sm font-semibold uppercase text-teal-200">Challenge board</p>
-          <h1 className="mt-2 text-4xl font-black">Pick Your Next Quest</h1>
+          <h1 className="mt-2 text-4xl font-black">Choose Your Quiz Level</h1>
         </div>
         <select value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-xl border border-white/10 bg-slate-900 px-4 py-3 text-white">
           {categories.map((item) => <option key={item}>{item}</option>)}
@@ -34,4 +34,5 @@ export default function ChallengesPage() {
     </div>
   );
 }
+
 

@@ -20,7 +20,7 @@ npm run dev
   - Express API: `http://localhost:3000`
 - `GET /api/health` returns `{ "status": "ok" }`.
 - SQLite database is created automatically at `server/database/campus.db`.
-- Default challenge seed creates 10 challenges.
+- Default quiz level seed creates 10 levels with 5 questions each.
 - `POST /api/students` creates a student and team.
 - `GET /api/challenges` returns seeded challenges.
 - `POST /api/submissions` completes a challenge and increases points.
@@ -39,11 +39,13 @@ npm run dev
 Backend test suite: `server/tests/api.test.js`
 
 - Health check
-- Default challenge seeding
+- Default quiz level seeding
 - Student and team creation
-- Challenge completion and points increase
+- Hidden correct answers in quiz API responses
+- Imperfect quiz attempt rejection
+- Perfect quiz completion and points increase
 - Badge unlocking
-- Duplicate submission rejection
+- Duplicate level completion rejection
 - Leaderboard sorting
 
 Frontend test suite:
@@ -53,3 +55,4 @@ Frontend test suite:
 - `client/src/pages/__tests__/EntryPage.test.jsx`
 
 These tests are intentionally small so students can copy them when adding new features.
+

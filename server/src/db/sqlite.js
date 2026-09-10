@@ -18,6 +18,10 @@ function placeholders(count) {
   return Array.from({ length: count }, () => "?").join(", ");
 }
 
+function columnExists(db, table, column) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().some((item) => item.name === column);
+}
+
 export function createSqliteDatabase() {
   const dbPath = databasePath();
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -63,6 +67,7 @@ export function createSqliteDatabase() {
         difficulty TEXT NOT NULL,
         points INTEGER NOT NULL,
         requirements TEXT NOT NULL DEFAULT '',
+        quiz_questions TEXT NOT NULL DEFAULT '[]',
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -70,6 +75,7 @@ export function createSqliteDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         student_id INTEGER NOT NULL,
         challenge_id INTEGER NOT NULL,
+        score INTEGER NOT NULL DEFAULT 0,
         completed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(student_id, challenge_id),
         FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
@@ -96,23 +102,58 @@ export function createSqliteDatabase() {
       );
     `);
 
-    if (get("SELECT COUNT(*) AS count FROM challenges").count === 0) {
-      const insert = db.prepare(`
-        INSERT INTO challenges (title, description, category, difficulty, points, requirements)
-        VALUES (@title, @description, @category, @difficulty, @points, @requirements)
-      `);
-      const insertMany = db.transaction((items) => items.forEach((item) => insert.run(item)));
-      insertMany(defaultChallenges);
+    if (!columnExists(db, "challenges", "quiz_questions")) {
+      db.exec("ALTER TABLE challenges ADD COLUMN quiz_questions TEXT NOT NULL DEFAULT '[]'");
     }
 
-    if (get("SELECT COUNT(*) AS count FROM badges").count === 0) {
-      const insert = db.prepare(`
-        INSERT INTO badges (name, description, icon, requirement_type, requirement_value)
-        VALUES (@name, @description, @icon, @requirement_type, @requirement_value)
-      `);
-      const insertMany = db.transaction((items) => items.forEach((item) => insert.run(item)));
-      insertMany(defaultBadges);
+    if (!columnExists(db, "submissions", "score")) {
+      db.exec("ALTER TABLE submissions ADD COLUMN score INTEGER NOT NULL DEFAULT 0");
     }
+
+    const hasQuizLevels = get("SELECT COUNT(*) AS count FROM challenges WHERE title LIKE 'Level %:%'").count > 0;
+    if (!hasQuizLevels) {
+      db.exec("DELETE FROM student_badges; DELETE FROM submissions; DELETE FROM badges; DELETE FROM challenges;");
+    }
+
+    const insertChallenge = db.prepare(`
+      INSERT INTO challenges (title, description, category, difficulty, points, requirements, quiz_questions)
+      VALUES (@title, @description, @category, @difficulty, @points, @requirements, @quiz_questions)
+    `);
+    const updateChallenge = db.prepare(`
+      UPDATE challenges
+      SET description = @description, category = @category, difficulty = @difficulty, points = @points,
+          requirements = @requirements, quiz_questions = @quiz_questions
+      WHERE title = @title
+    `);
+    const findChallenge = db.prepare("SELECT id FROM challenges WHERE title = ?");
+
+    const syncChallenges = db.transaction((items) => {
+      for (const item of items) {
+        const row = { ...item, quiz_questions: JSON.stringify(item.quiz_questions || []) };
+        if (findChallenge.get(row.title)) updateChallenge.run(row);
+        else insertChallenge.run(row);
+      }
+    });
+    syncChallenges(defaultChallenges);
+
+    const insertBadge = db.prepare(`
+      INSERT INTO badges (name, description, icon, requirement_type, requirement_value)
+      VALUES (@name, @description, @icon, @requirement_type, @requirement_value)
+    `);
+    const updateBadge = db.prepare(`
+      UPDATE badges
+      SET description = @description, icon = @icon, requirement_type = @requirement_type, requirement_value = @requirement_value
+      WHERE name = @name
+    `);
+    const findBadge = db.prepare("SELECT id FROM badges WHERE name = ?");
+
+    const syncBadges = db.transaction((items) => {
+      for (const item of items) {
+        if (findBadge.get(item.name)) updateBadge.run(item);
+        else insertBadge.run(item);
+      }
+    });
+    syncBadges(defaultBadges);
   }
 
   return { type: "sqlite", run, all, get, placeholders, initialize };

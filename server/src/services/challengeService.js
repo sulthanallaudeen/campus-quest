@@ -1,5 +1,20 @@
 import { db } from "../db/index.js";
 
+function parseQuestions(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return [];
+  }
+}
+
+function hideCorrectAnswers(challenge) {
+  const questions = parseQuestions(challenge.quiz_questions).map(({ correctIndex, ...question }) => question);
+  return { ...challenge, quiz_questions: questions };
+}
+
 export async function getChallenges(studentId) {
   const params = studentId ? [studentId] : [];
   const completionSelect = studentId
@@ -7,9 +22,11 @@ export async function getChallenges(studentId) {
     : "0 AS completed";
 
   const rows = await db.all(
-    `SELECT challenges.*, ${completionSelect}
+    `SELECT challenges.id, challenges.title, challenges.description, challenges.category, challenges.difficulty,
+            challenges.points, challenges.requirements, challenges.created_at, ${completionSelect}
      FROM challenges
-     ORDER BY points ASC, id ASC`,
+     WHERE challenges.title LIKE 'Level %:%'
+     ORDER BY challenges.id ASC`,
     params
   );
 
@@ -19,13 +36,18 @@ export async function getChallenges(studentId) {
 export async function getChallengeById(id, studentId) {
   const challenge = await db.get("SELECT * FROM challenges WHERE id = ?", [id]);
   if (!challenge) return null;
-  if (!studentId) return { ...challenge, completed: false };
 
-  const submission = await db.get(
-    "SELECT id FROM submissions WHERE student_id = ? AND challenge_id = ?",
-    [studentId, id]
-  );
-  return { ...challenge, completed: Boolean(submission) };
+  const completed = studentId
+    ? Boolean(await db.get("SELECT id FROM submissions WHERE student_id = ? AND challenge_id = ?", [studentId, id]))
+    : false;
+
+  return { ...hideCorrectAnswers(challenge), completed, question_count: parseQuestions(challenge.quiz_questions).length };
+}
+
+export async function getChallengeWithAnswers(id) {
+  const challenge = await db.get("SELECT * FROM challenges WHERE id = ?", [id]);
+  if (!challenge) return null;
+  return { ...challenge, quiz_questions: parseQuestions(challenge.quiz_questions) };
 }
 
 export async function createChallenge(data) {
@@ -38,15 +60,16 @@ export async function createChallenge(data) {
   }
 
   const result = await db.run(
-    `INSERT INTO challenges (title, description, category, difficulty, points, requirements)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO challenges (title, description, category, difficulty, points, requirements, quiz_questions)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       data.title.trim(),
       data.description.trim(),
       data.category,
       data.difficulty,
       Number(data.points),
-      data.requirements?.trim() || "Complete the challenge and be ready to explain your solution."
+      data.requirements?.trim() || "Answer all quiz questions correctly to complete this level.",
+      JSON.stringify(data.quiz_questions || [])
     ]
   );
 

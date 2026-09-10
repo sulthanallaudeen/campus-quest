@@ -2,7 +2,7 @@
 
 Learn • Build • Compete • Level Up
 
-Campus Quest is a full-stack gamified student challenge platform for college AI and vibe coding workshops. Students enter their name, join or create a team, complete coding challenges, earn points, unlock badges, and climb the leaderboard.
+Campus Quest is a full-stack gamified student challenge platform for college AI and vibe coding workshops. Students enter their name, join or create a team, complete quiz levels, earn points, unlock badges, and climb the leaderboard.
 
 ## Screenshots
 
@@ -104,6 +104,15 @@ Local development uses SQLite so students do not need a cloud database. When the
 
 Do not use browser localStorage as the database. This app only stores `studentId` in localStorage so the browser remembers the current student.
 
+
+## Quiz Levels
+
+Campus Quest now has 10 levels. Each level contains 5 multiple-choice questions about software, AI, AI agents, and vibe coding.
+
+Students must answer all 5 questions correctly to complete a level. Completing a level awards points and unlocks that level's badge.
+
+The backend grades quiz answers, so points and badges are not awarded by the browser alone.
+
 ## REST API
 
 Health: `GET /api/health`
@@ -176,7 +185,7 @@ Run only frontend React tests:
 npm run test --prefix client
 ```
 
-Backend tests live in `server/tests/api.test.js`. They show how to test health checks, seeded challenges, student creation, challenge completion, duplicate submission rejection, badge unlocking, and leaderboard sorting.
+Backend tests live in `server/tests/api.test.js`. They show how to test health checks, seeded challenges, student creation, challenge completion, Duplicate level completion rejection, badge unlocking, and leaderboard sorting.
 
 Frontend tests live beside the UI code in `client/src/components/__tests__` and `client/src/pages/__tests__`. They show how to render components, check text on screen, test links, fill a form, and mock an API call.
 
@@ -247,12 +256,12 @@ Do not depend on SQLite persistence for production on Render.
 
 - Change application colors
 - Change logo
-- Add a new challenge
+- Add a new quiz level
 - Change dashboard welcome message
 
 ### LEVEL 2
 
-- Add search to challenges
+- Add search to quiz levels
 - Add category filters
 - Add student avatars
 - Add new badges
@@ -261,10 +270,10 @@ Do not depend on SQLite persistence for production on Render.
 ### LEVEL 3
 
 - Add charts
-- Add challenge submission notes
+- Add quiz explanation notes
 - Add streaks
 - Add an admin page
-- Add team-specific challenges
+- Add team-specific quiz levels
 
 ### LEVEL 4
 
@@ -280,4 +289,5 @@ Do not depend on SQLite persistence for production on Render.
 - Marking a challenge complete trusts the student.
 - There is no admin screen yet.
 - Production file uploads, emails, and notifications are not included.
+
 

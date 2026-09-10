@@ -1,6 +1,6 @@
 import { db } from "../db/index.js";
 
-const codingCategories = ["React", "JavaScript", "Node.js", "Debugging"];
+const codingCategories = ["React", "JavaScript", "Node.js", "Debugging", "Software", "Vibe Coding", "AI Agents"];
 
 export async function getBadgesForStudent(studentId) {
   const badges = await db.all(
@@ -47,6 +47,10 @@ export async function checkAndAwardBadges(studentId) {
 }
 
 function isBadgeUnlocked(badge, student, completedChallenges) {
+  if (badge.requirement_type === "challenge_completion") {
+    return completedChallenges.some((challenge) => challenge.title === badge.requirement_value);
+  }
+
   if (badge.requirement_type === "completed_count") {
     return completedChallenges.length >= Number(badge.requirement_value);
   }

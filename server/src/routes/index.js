@@ -53,8 +53,8 @@ apiRouter.get("/submissions", asyncHandler(async (request, response) => {
 }));
 
 apiRouter.post("/submissions", asyncHandler(async (request, response) => {
-  const { studentId, student_id, challengeId, challenge_id } = request.body;
-  const result = await completeChallenge(studentId || student_id, challengeId || challenge_id);
+  const { studentId, student_id, challengeId, challenge_id, answers } = request.body;
+  const result = await completeChallenge(studentId || student_id, challengeId || challenge_id, answers);
   response.status(201).json(result);
 }));
 

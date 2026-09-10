@@ -1,6 +1,6 @@
 # CAMPUS QUEST
 
-Learn • Build • Compete • Level Up
+Learn • Build • Compete • Level Up 
 
 Campus Quest is a full-stack gamified student challenge platform for college AI and vibe coding workshops. Students enter their name, join or create a team, complete quiz levels, earn points, unlock badges, and climb the leaderboard.
 

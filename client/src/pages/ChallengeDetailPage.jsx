@@ -1,12 +1,13 @@
 import React from "react";
-import { CheckCircle2, RotateCcw } from "lucide-react";
+import { CheckCircle2, RotateCcw, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Loading from "../components/Loading.jsx";
 import { api, getStudentId } from "../services/api.js";
 
 export default function ChallengeDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [challenge, setChallenge] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -14,6 +15,7 @@ export default function ChallengeDetailPage() {
   const [resultDetails, setResultDetails] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [rewardBadge, setRewardBadge] = useState(null);
 
   useEffect(() => {
     api.get(`/challenges/${id}?studentId=${getStudentId()}`).then((response) => {
@@ -22,6 +24,16 @@ export default function ChallengeDetailPage() {
       setAnswers(Array(response.data.quiz_questions.length).fill(null));
     });
   }, [id]);
+
+  useEffect(() => {
+    if (!rewardBadge) return undefined;
+
+    const redirectTimer = setTimeout(() => {
+      navigate("/dashboard");
+    }, 2600);
+
+    return () => clearTimeout(redirectTimer);
+  }, [navigate, rewardBadge]);
 
   const progress = useMemo(() => {
     if (!challenge) return 0;
@@ -54,11 +66,13 @@ export default function ChallengeDetailPage() {
         challengeId: id,
         answers
       });
+      const unlockedBadge = response.data.unlockedBadges[0] || {
+        icon: "🏆",
+        name: challenge.title.replace(/^Level \d+: /, "")
+      };
       setCompleted(true);
-      const badgeText = response.data.unlockedBadges.length
-        ? ` Badge unlocked: ${response.data.unlockedBadges.map((badge) => `${badge.icon} ${badge.name}`).join(", ")}`
-        : "";
-      setMessage(`Perfect score: ${response.data.score}/${response.data.total}. You now have ${response.data.student.points} XP.${badgeText}`);
+      setRewardBadge({ ...unlockedBadge, points: response.data.student.points });
+      setMessage(`Perfect score: ${response.data.score}/${response.data.total}. Redirecting to dashboard...`);
     } catch (error) {
       setMessage(error.response?.data?.message || "Could not submit this quiz.");
       setResultDetails(error.response?.data?.details || null);
@@ -75,6 +89,23 @@ export default function ChallengeDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      {rewardBadge && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/90 px-5 text-center backdrop-blur-md">
+          <div className="badge-burst absolute h-72 w-72 rounded-full bg-teal-300/20" />
+          <div className="reward-card relative max-w-md rounded-3xl border border-teal-300/40 bg-slate-900/95 p-8 shadow-glow">
+            <div className="mx-auto grid h-24 w-24 place-items-center rounded-full bg-teal-300 text-5xl text-slate-950 reward-badge-icon">
+              {rewardBadge.icon}
+            </div>
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-teal-300/30 bg-teal-300/10 px-4 py-2 text-sm font-bold text-teal-100">
+              <Sparkles size={16} /> Badge Unlocked
+            </div>
+            <h2 className="mt-4 text-4xl font-black text-white">{rewardBadge.name}</h2>
+            <p className="mt-3 text-slate-300">Perfect score. Your badge is added and your XP is updated.</p>
+            <p className="mt-5 text-sm font-semibold uppercase text-teal-200">Returning to dashboard...</p>
+          </div>
+        </div>
+      )}
+
       <Link to="/challenges" className="text-sm text-teal-200">Back to levels</Link>
       <article className="mt-5 rounded-3xl border border-white/10 bg-white/[0.07] p-8 shadow-glow">
         <div className="flex flex-col justify-between gap-4 md:flex-row">

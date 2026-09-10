@@ -56,3 +56,8 @@ Frontend test suite:
 
 These tests are intentionally small so students can copy them when adding new features.
 
+
+Latest quiz reward check:
+
+- Badge unlock animation appears after a perfect quiz score.
+- Quiz page redirects to the dashboard after the reward animation.

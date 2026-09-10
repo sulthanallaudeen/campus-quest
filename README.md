@@ -66,11 +66,10 @@ cd campus-quest
 From the root folder:
 
 ```bash
-npm install
 npm run setup
 ```
 
-`npm install` installs the root helper dependency. `npm run setup` installs both the server and client dependencies.
+`npm run setup` installs the root helper dependency plus the server and client dependencies.
 
 ## Run Locally
 
@@ -80,9 +79,15 @@ npm run dev
 
 Open `http://localhost:5173`. The API runs at `http://localhost:3000/api`.
 
+You can quickly confirm the backend is running by opening `http://localhost:3000/api/health`. It should return:
+
+```json
+{ "status": "ok" }
+```
+
 ## Environment Variables
 
-Create `server/.env` from `server/.env.example`:
+Local development works with the checked-in `server/.env.example`. Create `server/.env` only when you need custom values:
 
 ```env
 PORT=3000
@@ -92,7 +97,7 @@ CLIENT_URL=http://localhost:5173
 DATABASE_URL=
 ```
 
-Create `client/.env` from `client/.env.example`:
+Local development works with the checked-in `client/.env.example`. Create `client/.env` only when you need custom values:
 
 ```env
 VITE_API_URL=http://localhost:3000/api
@@ -194,6 +199,8 @@ Frontend tests live beside the UI code in `client/src/components/__tests__` and 
 Port already in use: stop the process using port `3000` or `5173`, then run `npm run dev` again.
 
 Frontend cannot reach backend: check `client/.env`, make sure `VITE_API_URL=http://localhost:3000/api`, and confirm the backend says `Campus Quest API running`.
+
+Dashboard shows `404 /api/students/:id`: the browser may be holding an old `studentId` from a previous SQLite database. Click `Change Student`, or clear `localStorage.studentId` in the browser and enter the quest again.
 
 SQLite install error: install a current Node.js LTS version, delete `node_modules` in `server`, and run `npm run setup` again.
 

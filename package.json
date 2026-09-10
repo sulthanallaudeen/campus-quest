@@ -4,11 +4,8 @@
   "private": true,
   "description": "Campus Quest full-stack gamified student challenge platform.",
   "scripts": {
-    "setup": "npm install --prefix server && npm install --prefix client",
-    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
-    "start": "npm run start --prefix server",
-    "build": "npm run build --prefix client",
-    "test": "npm run test --prefix server && npm run test --prefix client"
+    "setup": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

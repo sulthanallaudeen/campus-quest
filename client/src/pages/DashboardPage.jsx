@@ -1,28 +1,55 @@
 import React from 'react';
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ChallengeCard from "../components/ChallengeCard.jsx";
 import Loading from "../components/Loading.jsx";
 import StatCard from "../components/StatCard.jsx";
-import { api, getStudentId } from "../services/api.js";
+import { api, clearStudentId, getStudentId } from "../services/api.js";
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function load() {
       const studentId = getStudentId();
-      const [student, challenges, leaderboard, badges] = await Promise.all([
-        api.get(`/students/${studentId}`),
-        api.get(`/challenges?studentId=${studentId}`),
-        api.get("/leaderboard"),
-        api.get(`/students/${studentId}/badges`)
-      ]);
-      const recommended = challenges.data.find((challenge) => !challenge.completed) || challenges.data[0];
-      setData({ student: student.data, challenges: challenges.data, leaderboard: leaderboard.data, badges: badges.data, recommended });
+
+      if (!studentId) {
+        navigate("/", { replace: true });
+        return;
+      }
+
+      try {
+        const [student, challenges, leaderboard, badges] = await Promise.all([
+          api.get(`/students/${studentId}`),
+          api.get(`/challenges?studentId=${studentId}`),
+          api.get("/leaderboard"),
+          api.get(`/students/${studentId}/badges`)
+        ]);
+
+        if (!isMounted) return;
+
+        const recommended = challenges.data.find((challenge) => !challenge.completed) || challenges.data[0];
+        setData({ student: student.data, challenges: challenges.data, leaderboard: leaderboard.data, badges: badges.data, recommended });
+      } catch (requestError) {
+        if (requestError.response?.status === 404) {
+          clearStudentId();
+          navigate("/", { replace: true });
+          return;
+        }
+
+        throw requestError;
+      }
     }
+
     load();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
 
   if (!data) return <Loading />;
 

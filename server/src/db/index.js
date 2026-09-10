@@ -1,8 +1,6 @@
-import dotenv from "dotenv";
+import "../config/loadEnv.js";
 import { createPostgresDatabase } from "./postgres.js";
 import { createSqliteDatabase } from "./sqlite.js";
-
-dotenv.config();
 
 const dbType = process.env.DB_TYPE || "sqlite";
 

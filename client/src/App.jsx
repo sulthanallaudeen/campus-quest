@@ -1,3 +1,4 @@
+import React from 'react';
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./layouts/AppLayout.jsx";
 import BadgesPage from "./pages/BadgesPage.jsx";
@@ -36,3 +37,4 @@ export default function App() {
     </Routes>
   );
 }
+

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState } from "react";
 import Loading from "../components/Loading.jsx";
 import { api, getStudentId } from "../services/api.js";
@@ -84,3 +85,4 @@ export default function TeamsPage() {
     </div>
   );
 }
+

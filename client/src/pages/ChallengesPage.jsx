@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useMemo, useState } from "react";
 import ChallengeCard from "../components/ChallengeCard.jsx";
 import Loading from "../components/Loading.jsx";
@@ -33,3 +34,4 @@ export default function ChallengesPage() {
     </div>
   );
 }
+

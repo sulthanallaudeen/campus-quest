@@ -1,3 +1,4 @@
+import React from 'react';
 import { Award, Flag, LayoutDashboard, Medal, Shield, UserRound, Users } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { clearStudentId } from "../services/api.js";
@@ -76,3 +77,4 @@ export default function AppLayout() {
     </div>
   );
 }
+

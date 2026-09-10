@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from "react-router-dom";
 
 export default function ChallengeCard({ challenge }) {
@@ -20,3 +21,4 @@ export default function ChallengeCard({ challenge }) {
     </Link>
   );
 }
+

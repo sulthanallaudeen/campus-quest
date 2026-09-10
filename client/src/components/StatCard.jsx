@@ -1,3 +1,4 @@
+import React from 'react';
 export default function StatCard({ icon, label, value, tone = "teal" }) {
   const tones = {
     teal: "from-teal-400/20 to-cyan-500/10 text-teal-200 border-teal-300/20",
@@ -16,3 +17,4 @@ export default function StatCard({ icon, label, value, tone = "teal" }) {
     </div>
   );
 }
+

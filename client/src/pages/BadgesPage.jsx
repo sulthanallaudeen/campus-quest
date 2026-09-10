@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState } from "react";
 import Loading from "../components/Loading.jsx";
 import { api, getStudentId } from "../services/api.js";
@@ -43,3 +44,4 @@ function BadgeSection({ title, badges, locked = false, empty }) {
     </section>
   );
 }
+

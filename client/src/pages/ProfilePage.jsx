@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState } from "react";
 import Loading from "../components/Loading.jsx";
 import StatCard from "../components/StatCard.jsx";
@@ -43,3 +44,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

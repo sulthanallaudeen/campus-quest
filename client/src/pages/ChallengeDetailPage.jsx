@@ -1,3 +1,4 @@
+import React from 'react';
 import { CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -61,3 +62,4 @@ export default function ChallengeDetailPage() {
     </div>
   );
 }
+

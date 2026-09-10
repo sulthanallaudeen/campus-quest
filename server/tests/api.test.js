@@ -1,0 +1,97 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, it } from "node:test";
+import request from "supertest";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const testDatabasePath = path.resolve(__dirname, "../database/test.db");
+
+process.env.DB_TYPE = "sqlite";
+process.env.SQLITE_PATH = "./database/test.db";
+process.env.CLIENT_URL = "http://localhost:5173";
+
+if (fs.existsSync(testDatabasePath)) {
+  fs.unlinkSync(testDatabasePath);
+}
+
+const { app } = await import("../src/app.js");
+const { db } = await import("../src/db/index.js");
+
+await db.initialize();
+
+describe("Campus Quest API", () => {
+  it("returns a health check", async () => {
+    const response = await request(app).get("/api/health").expect(200);
+
+    assert.equal(response.body.status, "ok");
+  });
+
+  it("seeds the default workshop challenges", async () => {
+    const response = await request(app).get("/api/challenges").expect(200);
+
+    assert.equal(response.body.length, 10);
+    assert.equal(response.body[0].title, "Build Your First React Component");
+  });
+
+  it("creates a student and team", async () => {
+    const response = await request(app)
+      .post("/api/students")
+      .send({ name: "Test Student", department: "Computer Science", teamName: "Test Team" })
+      .expect(201);
+
+    assert.equal(response.body.name, "Test Student");
+    assert.equal(response.body.team_name, "Test Team");
+    assert.equal(response.body.points, 0);
+  });
+
+  it("completes a challenge, adds points, and unlocks First Launch", async () => {
+    const studentResponse = await request(app)
+      .post("/api/students")
+      .send({ name: "Badge Learner", department: "AI" })
+      .expect(201);
+
+    const challengesResponse = await request(app).get("/api/challenges").expect(200);
+    const firstChallenge = challengesResponse.body[0];
+
+    const completionResponse = await request(app)
+      .post("/api/submissions")
+      .send({ studentId: studentResponse.body.id, challengeId: firstChallenge.id })
+      .expect(201);
+
+    assert.equal(completionResponse.body.student.points, firstChallenge.points);
+    assert.equal(completionResponse.body.unlockedBadges[0].name, "First Launch");
+  });
+
+  it("rejects duplicate challenge completions", async () => {
+    const studentResponse = await request(app)
+      .post("/api/students")
+      .send({ name: "Duplicate Tester", department: "Debugging" })
+      .expect(201);
+
+    const challengesResponse = await request(app).get("/api/challenges").expect(200);
+    const challengeId = challengesResponse.body[0].id;
+
+    await request(app)
+      .post("/api/submissions")
+      .send({ studentId: studentResponse.body.id, challengeId })
+      .expect(201);
+
+    const duplicateResponse = await request(app)
+      .post("/api/submissions")
+      .send({ studentId: studentResponse.body.id, challengeId })
+      .expect(409);
+
+    assert.equal(duplicateResponse.body.message, "Challenge already completed by this student.");
+  });
+
+  it("sorts the leaderboard by highest points", async () => {
+    const leaderboardResponse = await request(app).get("/api/leaderboard").expect(200);
+
+    for (let index = 1; index < leaderboardResponse.body.length; index += 1) {
+      assert.ok(leaderboardResponse.body[index - 1].points >= leaderboardResponse.body[index].points);
+    }
+  });
+});

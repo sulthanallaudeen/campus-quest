@@ -153,6 +153,33 @@ campus-quest/
   .gitignore
 ```
 
+
+## Running Tests
+
+Campus Quest includes beginner-friendly tests for both sides of the app.
+
+Run all tests from the root folder:
+
+```bash
+npm test
+```
+
+Run only backend API tests:
+
+```bash
+npm run test --prefix server
+```
+
+Run only frontend React tests:
+
+```bash
+npm run test --prefix client
+```
+
+Backend tests live in `server/tests/api.test.js`. They show how to test health checks, seeded challenges, student creation, challenge completion, duplicate submission rejection, badge unlocking, and leaderboard sorting.
+
+Frontend tests live beside the UI code in `client/src/components/__tests__` and `client/src/pages/__tests__`. They show how to render components, check text on screen, test links, fill a form, and mock an API call.
+
 ## Common Errors
 
 Port already in use: stop the process using port `3000` or `5173`, then run `npm run dev` again.
@@ -253,3 +280,4 @@ Do not depend on SQLite persistence for production on Render.
 - Marking a challenge complete trusts the student.
 - There is no admin screen yet.
 - Production file uploads, emails, and notifications are not included.
+

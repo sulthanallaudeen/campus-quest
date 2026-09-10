@@ -33,3 +33,23 @@ npm run dev
 ## Notes
 
 `npm install` reported dependency audit warnings from third-party packages. The application build and local runtime checks completed successfully.
+
+## Automated Tests Added
+
+Backend test suite: `server/tests/api.test.js`
+
+- Health check
+- Default challenge seeding
+- Student and team creation
+- Challenge completion and points increase
+- Badge unlocking
+- Duplicate submission rejection
+- Leaderboard sorting
+
+Frontend test suite:
+
+- `client/src/components/__tests__/StatCard.test.jsx`
+- `client/src/components/__tests__/ChallengeCard.test.jsx`
+- `client/src/pages/__tests__/EntryPage.test.jsx`
+
+These tests are intentionally small so students can copy them when adding new features.

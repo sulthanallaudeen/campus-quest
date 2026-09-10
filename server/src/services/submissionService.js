@@ -45,24 +45,38 @@ export async function completeChallenge(studentId, challengeId, answers = []) {
     throw error;
   }
 
-  if (!Array.isArray(answers) || answers.length !== challenge.quiz_questions.length) {
-    const error = new Error("Please answer all quiz questions before submitting.");
+  if (!Array.isArray(answers) || answers.length !== 5) {
+    const error = new Error("Please answer all 5 quiz questions before submitting.");
     error.status = 400;
     throw error;
   }
 
-  const results = challenge.quiz_questions.map((question, index) => ({
-    question: question.question,
-    selectedIndex: Number(answers[index]),
-    correctIndex: Number(question.correctIndex),
-    correct: Number(answers[index]) === Number(question.correctIndex)
-  }));
+  const questionMap = new Map(challenge.quiz_questions.map((question) => [question.id, question]));
+  const results = answers.map((answer) => {
+    const question = questionMap.get(answer.questionId);
+    const selectedOption = String(answer.selectedOption || "");
+    return {
+      question: question?.question || "Unknown question",
+      questionId: answer.questionId,
+      selectedOption,
+      correctAnswer: question?.correctAnswer,
+      correct: Boolean(question && selectedOption === question.correctAnswer)
+    };
+  });
+
+  const uniqueQuestionCount = new Set(answers.map((answer) => answer.questionId)).size;
+  if (uniqueQuestionCount !== 5 || results.some((result) => result.question === "Unknown question" || !result.selectedOption)) {
+    const error = new Error("Please answer 5 valid quiz questions before submitting.");
+    error.status = 400;
+    throw error;
+  }
+
   const score = results.filter((result) => result.correct).length;
 
-  if (score !== challenge.quiz_questions.length) {
-    const error = new Error(`You scored ${score}/${challenge.quiz_questions.length}. Try again to complete this level.`);
+  if (score !== 5) {
+    const error = new Error(`You scored ${score}/5. Try again to complete this level.`);
     error.status = 400;
-    error.details = { score, total: challenge.quiz_questions.length, results };
+    error.details = { score, total: 5, results };
     throw error;
   }
 
@@ -71,5 +85,5 @@ export async function completeChallenge(studentId, challengeId, answers = []) {
   const unlockedBadges = await checkAndAwardBadges(studentId);
   const updatedStudent = await getStudentById(studentId);
 
-  return { student: updatedStudent, challenge, unlockedBadges, score, total: challenge.quiz_questions.length };
+  return { student: updatedStudent, challenge, unlockedBadges, score, total: 5 };
 }

@@ -107,11 +107,11 @@ Do not use browser localStorage as the database. This app only stores `studentId
 
 ## Quiz Levels
 
-Campus Quest now has 10 levels. Each level contains 5 multiple-choice questions about software, AI, AI agents, and vibe coding.
+Campus Quest now has 10 levels. Each level has a 10-question bank and serves 5 random multiple-choice questions about software, AI, AI agents, and vibe coding.
 
-Students must answer all 5 questions correctly to complete a level. Completing a level awards points and unlocks that level's badge.
+Students must answer the 5 selected questions correctly to complete a level. Completing a level awards points and unlocks that level's badge.
 
-The backend grades quiz answers, so points and badges are not awarded by the browser alone.
+The backend grades quiz answers, so points and badges are not awarded by the browser alone. Answer options are shuffled each time, and correct answers are hidden from public API responses.
 
 ## REST API
 
@@ -289,5 +289,6 @@ Do not depend on SQLite persistence for production on Render.
 - Marking a challenge complete trusts the student.
 - There is no admin screen yet.
 - Production file uploads, emails, and notifications are not included.
+
 
 

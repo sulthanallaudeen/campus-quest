@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import request from "supertest";
+import { defaultChallenges } from "../src/data/seeds.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +23,14 @@ const { db } = await import("../src/db/index.js");
 
 await db.initialize();
 
+function correctAnswersFor(publicQuestions, levelTitle = "Level 1: Starter Spark") {
+  const sourceLevel = defaultChallenges.find((challenge) => challenge.title === levelTitle);
+  return publicQuestions.map((publicQuestion) => {
+    const sourceQuestion = sourceLevel.quiz_questions.find((question) => question.id === publicQuestion.id);
+    return { questionId: publicQuestion.id, selectedOption: sourceQuestion.correctAnswer };
+  });
+}
+
 describe("Campus Quest API", () => {
   it("returns a health check", async () => {
     const response = await request(app).get("/api/health").expect(200);
@@ -36,12 +45,13 @@ describe("Campus Quest API", () => {
     assert.equal(response.body[0].title, "Level 1: Starter Spark");
   });
 
-  it("returns quiz questions without correct answers", async () => {
+  it("returns 5 random quiz questions without correct answers", async () => {
     const levels = await request(app).get("/api/challenges").expect(200);
     const response = await request(app).get(`/api/challenges/${levels.body[0].id}`).expect(200);
 
     assert.equal(response.body.quiz_questions.length, 5);
-    assert.equal(response.body.quiz_questions[0].correctIndex, undefined);
+    assert.equal(response.body.question_bank_count, 10);
+    assert.equal(response.body.quiz_questions[0].correctAnswer, undefined);
   });
 
   it("creates a student and team", async () => {
@@ -63,10 +73,11 @@ describe("Campus Quest API", () => {
 
     const levelsResponse = await request(app).get("/api/challenges").expect(200);
     const firstLevel = levelsResponse.body[0];
+    const quizResponse = await request(app).get(`/api/challenges/${firstLevel.id}`).expect(200);
 
     const completionResponse = await request(app)
       .post("/api/submissions")
-      .send({ studentId: studentResponse.body.id, challengeId: firstLevel.id, answers: [0, 0, 0, 0, 0] })
+      .send({ studentId: studentResponse.body.id, challengeId: firstLevel.id, answers: correctAnswersFor(quizResponse.body.quiz_questions) })
       .expect(201);
 
     assert.equal(completionResponse.body.score, 5);
@@ -81,9 +92,14 @@ describe("Campus Quest API", () => {
       .expect(201);
 
     const levelsResponse = await request(app).get("/api/challenges").expect(200);
+    const firstLevel = levelsResponse.body[0];
+    const quizResponse = await request(app).get(`/api/challenges/${firstLevel.id}`).expect(200);
+    const answers = correctAnswersFor(quizResponse.body.quiz_questions);
+    answers[0] = { questionId: quizResponse.body.quiz_questions[0].id, selectedOption: "Definitely wrong" };
+
     const response = await request(app)
       .post("/api/submissions")
-      .send({ studentId: studentResponse.body.id, challengeId: levelsResponse.body[0].id, answers: [1, 0, 0, 0, 0] })
+      .send({ studentId: studentResponse.body.id, challengeId: firstLevel.id, answers })
       .expect(400);
 
     assert.equal(response.body.details.score, 4);
@@ -97,15 +113,17 @@ describe("Campus Quest API", () => {
 
     const levelsResponse = await request(app).get("/api/challenges").expect(200);
     const challengeId = levelsResponse.body[0].id;
+    const quizResponse = await request(app).get(`/api/challenges/${challengeId}`).expect(200);
+    const answers = correctAnswersFor(quizResponse.body.quiz_questions);
 
     await request(app)
       .post("/api/submissions")
-      .send({ studentId: studentResponse.body.id, challengeId, answers: [0, 0, 0, 0, 0] })
+      .send({ studentId: studentResponse.body.id, challengeId, answers })
       .expect(201);
 
     const duplicateResponse = await request(app)
       .post("/api/submissions")
-      .send({ studentId: studentResponse.body.id, challengeId, answers: [0, 0, 0, 0, 0] })
+      .send({ studentId: studentResponse.body.id, challengeId, answers })
       .expect(409);
 
     assert.equal(duplicateResponse.body.message, "Level already completed by this student.");

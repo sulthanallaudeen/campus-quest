@@ -61,3 +61,11 @@ Latest quiz reward check:
 
 - Badge unlock animation appears after a perfect quiz score.
 - Quiz page redirects to the dashboard after the reward animation.
+
+Randomized quiz bank check:
+
+- Each level stores 10 questions in JSON.
+- The API serves 5 random questions per quiz attempt.
+- Answer options are shuffled before they reach the frontend.
+- Correct answers are not included in public quiz API responses.
+- Frontend submits answers by question id, which keeps submit reliable on the 5th question.

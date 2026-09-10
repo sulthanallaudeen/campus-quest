@@ -21,7 +21,7 @@ export default function ChallengeDetailPage() {
     api.get(`/challenges/${id}?studentId=${getStudentId()}`).then((response) => {
       setChallenge(response.data);
       setCompleted(response.data.completed);
-      setAnswers(Array(response.data.quiz_questions.length).fill(null));
+      setAnswers({});
     });
   }, [id]);
 
@@ -40,16 +40,17 @@ export default function ChallengeDetailPage() {
     return Math.round(((currentQuestion + 1) / challenge.quiz_questions.length) * 100);
   }, [challenge, currentQuestion]);
 
-  function chooseAnswer(optionIndex) {
-    const nextAnswers = [...answers];
-    nextAnswers[currentQuestion] = optionIndex;
-    setAnswers(nextAnswers);
+  function chooseAnswer(selectedOption) {
+    setAnswers((currentAnswers) => ({
+      ...currentAnswers,
+      [challenge.quiz_questions[currentQuestion].id]: selectedOption
+    }));
     setMessage("");
     setResultDetails(null);
   }
 
   function retryQuiz() {
-    setAnswers(Array(challenge.quiz_questions.length).fill(null));
+    setAnswers({});
     setCurrentQuestion(0);
     setMessage("");
     setResultDetails(null);
@@ -64,7 +65,10 @@ export default function ChallengeDetailPage() {
       const response = await api.post("/submissions", {
         studentId: getStudentId(),
         challengeId: id,
-        answers
+        answers: challenge.quiz_questions.map((quizQuestion) => ({
+          questionId: quizQuestion.id,
+          selectedOption: answers[quizQuestion.id]
+        }))
       });
       const unlockedBadge = response.data.unlockedBadges[0] || {
         icon: "🏆",
@@ -85,7 +89,7 @@ export default function ChallengeDetailPage() {
 
   const question = challenge.quiz_questions[currentQuestion];
   const isLastQuestion = currentQuestion === challenge.quiz_questions.length - 1;
-  const allAnswered = answers.every((answer) => answer !== null);
+  const allAnswered = challenge.quiz_questions.every((quizQuestion) => answers[quizQuestion.id]);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -136,12 +140,12 @@ export default function ChallengeDetailPage() {
           <h2 className="text-2xl font-bold">{question.question}</h2>
           <div className="mt-5 grid gap-3">
             {question.options.map((option, optionIndex) => {
-              const selected = answers[currentQuestion] === optionIndex;
+              const selected = answers[question.id] === option;
               return (
                 <button
                   key={option}
                   type="button"
-                  onClick={() => chooseAnswer(optionIndex)}
+                  onClick={() => chooseAnswer(option)}
                   className={`rounded-xl border px-4 py-3 text-left font-semibold transition ${
                     selected ? "border-teal-300 bg-teal-300 text-slate-950" : "border-white/10 bg-white/[0.06] text-slate-100 hover:border-teal-300/50"
                   }`}
@@ -165,7 +169,7 @@ export default function ChallengeDetailPage() {
           {!isLastQuestion && (
             <button
               type="button"
-              disabled={answers[currentQuestion] === null}
+              disabled={!answers[question.id]}
               onClick={() => setCurrentQuestion((questionIndex) => questionIndex + 1)}
               className="rounded-xl bg-teal-300 px-5 py-3 font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -175,12 +179,12 @@ export default function ChallengeDetailPage() {
           {isLastQuestion && (
             <button
               type="button"
-              disabled={!allAnswered || completed || submitting}
+              disabled={!allAnswered || submitting}
               onClick={submitQuiz}
               className="inline-flex items-center gap-2 rounded-xl bg-teal-300 px-5 py-3 font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <CheckCircle2 size={20} />
-              {completed ? "Level Completed" : submitting ? "Checking..." : "Submit Quiz"}
+              {submitting ? "Checking..." : "Submit Quiz"}
             </button>
           )}
           <button type="button" onClick={retryQuiz} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-5 py-3 font-bold text-slate-200">
@@ -198,3 +202,4 @@ export default function ChallengeDetailPage() {
     </div>
   );
 }
+

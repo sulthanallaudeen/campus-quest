@@ -10,9 +10,23 @@ function parseQuestions(value) {
   }
 }
 
-function hideCorrectAnswers(challenge) {
-  const questions = parseQuestions(challenge.quiz_questions).map(({ correctIndex, ...question }) => question);
-  return { ...challenge, quiz_questions: questions };
+function shuffle(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function buildQuizQuestions(challenge) {
+  return shuffle(parseQuestions(challenge.quiz_questions))
+    .slice(0, 5)
+    .map((question) => ({
+      id: question.id,
+      question: question.question,
+      options: shuffle(question.options)
+    }));
 }
 
 export async function getChallenges(studentId) {
@@ -41,7 +55,14 @@ export async function getChallengeById(id, studentId) {
     ? Boolean(await db.get("SELECT id FROM submissions WHERE student_id = ? AND challenge_id = ?", [studentId, id]))
     : false;
 
-  return { ...hideCorrectAnswers(challenge), completed, question_count: parseQuestions(challenge.quiz_questions).length };
+  const allQuestions = parseQuestions(challenge.quiz_questions);
+  return {
+    ...challenge,
+    completed,
+    question_count: 5,
+    question_bank_count: allQuestions.length,
+    quiz_questions: buildQuizQuestions(challenge)
+  };
 }
 
 export async function getChallengeWithAnswers(id) {

@@ -26,8 +26,8 @@ const level = {
   requirements: "Answer all questions correctly.",
   completed: false,
   quiz_questions: [
-    { question: "What is software?", options: ["Instructions", "Hardware", "Cable", "Battery"] },
-    { question: "What does CSS style?", options: ["Web pages", "Databases", "APIs", "Routers"] }
+    { id: "q1", question: "What is software?", options: ["Instructions", "Hardware", "Cable", "Battery"] },
+    { id: "q2", question: "What does CSS style?", options: ["Web pages", "Databases", "APIs", "Routers"] }
   ]
 };
 
@@ -87,6 +87,7 @@ describe("ChallengeDetailPage quiz", () => {
     await waitFor(() => expect(screen.getByText("Dashboard")).toBeInTheDocument(), { timeout: 4000 });
   });
 });
+
 
 
 
